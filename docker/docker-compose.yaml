@@ -1,0 +1,55 @@
+version: "3"
+services:
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: drivers_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - website_pgdata:/var/lib/postgresql/data
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin-user
+      MONGO_INITDB_ROOT_PASSWORD: admin-password
+      MONGO_INITDB_DATABASE: admin
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongodata:/data/db
+  svc_auth:
+    image: svc_aut
+    ports:
+      - 8081:8081
+    depends_on:
+      - db
+    environment:
+      POSTGRESQL_HOST: db
+      POSTGRESQL_PORT: 5432
+    volumes:
+      - svc_auth_data:/var/lib/svc_auth/data/
+
+  svc_driver:
+    image: svc_driver
+    ports:
+      - 8082:8081
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+    volumes:
+      - svc_drive_data:/var/lib/svc_driver/data
+volumes:
+  website_pgdata:
+  mongodata:
+  svc_auth_data:
+  svc_drive_data:
+
+
